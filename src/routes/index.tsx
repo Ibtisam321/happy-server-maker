@@ -35,8 +35,9 @@ export const Route = createFileRoute("/")({
   component: ComplyfyPage,
 });
 
-type Page = "home" | "account" | "generator";
+type Page = "home" | "account" | "generator" | "review";
 type AuthMode = "signup" | "login";
+type Role = "admin" | "dpo" | "user";
 
 interface SavedPolicy {
   id: string;
@@ -48,6 +49,7 @@ interface SavedPolicy {
 function ComplyfyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<Page>("home");
+  const [roles, setRoles] = useState<Role[]>([]);
 
   // Auth state restoration — listener BEFORE getSession (per docs)
   useEffect(() => {
@@ -60,6 +62,23 @@ function ComplyfyPage() {
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  // Load roles whenever the user changes
+  useEffect(() => {
+    if (!user) {
+      setRoles([]);
+      return;
+    }
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        setRoles((data ?? []).map((r) => r.role as Role));
+      });
+  }, [user]);
+
+  const isReviewer = roles.includes("admin") || roles.includes("dpo");
 
   const logout = async () => {
     await supabase.auth.signOut();
