@@ -1,0 +1,150 @@
+/* Complyfy original design system — preserved verbatim from original HTML */
+:root {
+  --bg: #f4f3ef;
+  --surface: #ffffff;
+  --ink: #111111;
+  --muted: #6b6b6b;
+  --border: #e0dfd8;
+  --accent: #1a1a2e;
+  --accent-soft: #eeeef8;
+  --yellow: #e9ff47;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warn: #d97706;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Syne', sans-serif;
+  --transition: 0.18s ease;
+}
+.complyfy-app *, .complyfy-app *::before, .complyfy-app *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.complyfy-app { font-family: var(--font-body); background: var(--bg); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.65; }
+.complyfy-app .hidden { display: none !important; }
+
+.complyfy-app .site-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.complyfy-app .logo { font-family: var(--font-display); font-weight: 800; font-size: 19px; letter-spacing: -0.5px; color: var(--accent); display: flex; align-items: center; }
+.complyfy-app .logo-dot { display: inline-block; width: 7px; height: 7px; background: var(--yellow); border-radius: 50%; margin-left: 4px; border: 1.5px solid var(--accent); }
+.complyfy-app #headerUser { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 10px; }
+.complyfy-app .avatar { width: 28px; height: 28px; background: var(--accent); color: var(--yellow); border-radius: 50%; font-weight: 700; font-size: 12px; font-family: var(--font-display); display: flex; align-items: center; justify-content: center; }
+.complyfy-app #logoutBtn { font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: var(--transition); }
+.complyfy-app #logoutBtn:hover { background: var(--bg); color: var(--ink); }
+
+.complyfy-app .container { max-width: 680px; margin: 0 auto; padding: 36px 20px 60px; }
+.complyfy-app .card { background: var(--surface); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+
+.complyfy-app .hero-tag { display: inline-flex; align-items: center; gap: 6px; background: var(--yellow); color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 16px; }
+.complyfy-app .hero-tag::before { content: 'UK GDPR'; font-size: 9px; }
+.complyfy-app h1 { font-family: var(--font-display); font-size: 32px; font-weight: 800; letter-spacing: -1px; line-height: 1.15; margin-bottom: 14px; color: var(--ink); }
+.complyfy-app h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 16px; color: var(--ink); }
+.complyfy-app h3 { font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: -0.2px; margin: 0 0 18px; color: var(--ink); }
+.complyfy-app p { color: var(--muted); margin-bottom: 10px; font-size: 14px; }
+.complyfy-app p:last-child { margin-bottom: 0; }
+
+.complyfy-app .home-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin: 10px 0 20px; }
+.complyfy-app .home-list li { font-size: 14px; color: var(--muted); display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); }
+.complyfy-app .home-list li::before { content: '✓'; color: var(--success); font-weight: 700; font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+
+.complyfy-app .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+.complyfy-app .info-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.complyfy-app .info-box-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+.complyfy-app .info-box-value { font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--accent); }
+.complyfy-app .info-box p { font-size: 12px; margin-top: 2px; }
+
+.complyfy-app button.primary, .complyfy-app button.secondary {
+  width: 100%; border: none; border-radius: var(--radius); cursor: pointer;
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  padding: 13px 20px; margin-top: 10px; transition: var(--transition);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.complyfy-app button.primary { background: var(--accent); color: var(--yellow); }
+.complyfy-app button.primary:hover { background: #2d2d50; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(26,26,46,0.22); }
+.complyfy-app button.primary:active { transform: translateY(0); }
+.complyfy-app button.primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+.complyfy-app button.secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.complyfy-app button.secondary:hover { background: var(--bg); color: var(--ink); }
+.complyfy-app .btn-row { display: grid; grid-template-columns: auto 1fr; gap: 8px; margin-top: 10px; }
+.complyfy-app .btn-row button { margin-top: 0; }
+.complyfy-app .btn-row button.secondary { width: auto; padding-left: 16px; padding-right: 16px; }
+
+.complyfy-app .auth-tabs { display: flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
+.complyfy-app .auth-tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-size: 14px; font-weight: 600; background: var(--bg); color: var(--muted); border: none; font-family: var(--font-body); transition: var(--transition); }
+.complyfy-app .auth-tab.active { background: var(--accent); color: var(--yellow); }
+.complyfy-app .auth-error { color: var(--danger); font-size: 13px; margin-top: 8px; }
+.complyfy-app .auth-info { color: var(--success); font-size: 13px; margin-top: 8px; }
+
+.complyfy-app .step-header { margin-bottom: 24px; }
+.complyfy-app .step-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.complyfy-app .step-label { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.complyfy-app .step-count { font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--accent); }
+.complyfy-app .progress { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+.complyfy-app .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); border-radius: 4px; }
+.complyfy-app .step-dots { display: flex; gap: 5px; }
+.complyfy-app .step-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: var(--transition); }
+.complyfy-app .step-dot.active { background: var(--accent); transform: scale(1.3); }
+.complyfy-app .step-dot.done { background: var(--accent); opacity: 0.35; }
+
+.complyfy-app .field { margin-bottom: 16px; }
+.complyfy-app .field > label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.complyfy-app .badge { font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: #fef3c7; color: #92400e; }
+.complyfy-app .badge.req { background: #fee2e2; color: #991b1b; }
+.complyfy-app .field-hint { font-size: 12px; color: var(--muted); margin-bottom: 6px; line-height: 1.4; }
+
+.complyfy-app input[type="text"], .complyfy-app input[type="email"], .complyfy-app input[type="password"], .complyfy-app input[type="url"], .complyfy-app select, .complyfy-app textarea {
+  width: 100%; padding: 10px 13px; border: 1px solid var(--border); border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 14px; color: var(--ink); background: var(--bg);
+  transition: var(--transition); appearance: none; outline: none;
+}
+.complyfy-app select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6b6b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; cursor: pointer; }
+.complyfy-app textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.complyfy-app input:focus, .complyfy-app select:focus, .complyfy-app textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,26,46,0.08); background: var(--surface); }
+.complyfy-app input::placeholder, .complyfy-app textarea::placeholder { color: #b0b0aa; }
+.complyfy-app input.invalid, .complyfy-app select.invalid, .complyfy-app textarea.invalid { border-color: var(--danger); background: #fff5f5; }
+
+.complyfy-app .checkbox-group { display: flex; flex-direction: column; gap: 6px; }
+.complyfy-app .check-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); cursor: pointer; transition: var(--transition); user-select: none; }
+.complyfy-app .check-item:hover { border-color: var(--accent); background: var(--accent-soft); }
+.complyfy-app .check-item input[type="checkbox"] { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; accent-color: var(--accent); cursor: pointer; padding: 0; }
+.complyfy-app .check-item .clabel strong { display: block; font-size: 13px; font-weight: 600; color: var(--ink); }
+.complyfy-app .check-item .clabel span { font-size: 12px; color: var(--muted); }
+
+.complyfy-app .tooltip { position: relative; cursor: help; }
+.complyfy-app .tip-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: var(--accent-soft); color: var(--accent); border-radius: 50%; font-size: 10px; font-weight: 700; }
+.complyfy-app .tooltiptext { visibility: hidden; width: 240px; background: var(--ink); color: #fff; font-size: 12px; line-height: 1.5; text-align: left; border-radius: 8px; padding: 10px 12px; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s; z-index: 10; pointer-events: none; }
+.complyfy-app .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+
+.complyfy-app .tipbox { background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius); padding: 11px 14px; font-size: 13px; color: #92400e; margin-bottom: 18px; display: flex; gap: 8px; line-height: 1.5; }
+
+.complyfy-app .score-bar-wrap { margin: 16px 0; }
+.complyfy-app .score-label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.complyfy-app .score-number { font-family: var(--font-display); font-size: 28px; font-weight: 800; }
+.complyfy-app .score-good { color: var(--success); }
+.complyfy-app .score-mid  { color: var(--warn); }
+.complyfy-app .score-bad  { color: var(--danger); }
+.complyfy-app .score-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.complyfy-app .score-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+.complyfy-app .score-fill.good { background: var(--success); }
+.complyfy-app .score-fill.mid  { background: var(--warn); }
+.complyfy-app .score-fill.bad  { background: var(--danger); }
+.complyfy-app .risk-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.complyfy-app .risk-tag { font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+.complyfy-app .risk-tag.warn { background: #fef3c7; color: #92400e; }
+.complyfy-app .risk-tag.bad  { background: #fee2e2; color: #991b1b; }
+.complyfy-app .risk-tag.good { background: #dcfce7; color: #166534; }
+
+.complyfy-app .output { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.7; color: var(--ink); max-height: 500px; overflow-y: auto; margin: 16px 0; }
+.complyfy-app button.download-btn { background: var(--yellow); color: var(--accent); border: none; border-radius: var(--radius); padding: 13px 20px; width: 100%; cursor: pointer; font-family: var(--font-body); font-size: 14px; font-weight: 700; margin-top: 10px; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.complyfy-app button.download-btn:hover { background: #d9ef30; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+.complyfy-app .saved-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.complyfy-app .saved-list li { padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.complyfy-app .saved-list .meta { color: var(--muted); font-size: 11px; }
+.complyfy-app .saved-list .score-pill { font-family: var(--font-display); font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 20px; }
+
+.complyfy-app .section-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+@media (max-width: 500px) {
+  .complyfy-app .card { padding: 20px; }
+  .complyfy-app h1 { font-size: 26px; }
+  .complyfy-app .info-grid { grid-template-columns: 1fr; }
+}
