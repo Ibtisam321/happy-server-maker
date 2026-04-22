@@ -21,6 +21,8 @@ export type Database = {
           form_data: Json
           id: string
           policy_text: string
+          recommendations: Json
+          risk_level: string
           score: number
           updated_at: string
           user_id: string
@@ -31,6 +33,8 @@ export type Database = {
           form_data?: Json
           id?: string
           policy_text: string
+          recommendations?: Json
+          risk_level?: string
           score: number
           updated_at?: string
           user_id: string
@@ -41,6 +45,8 @@ export type Database = {
           form_data?: Json
           id?: string
           policy_text?: string
+          recommendations?: Json
+          risk_level?: string
           score?: number
           updated_at?: string
           user_id?: string
@@ -84,6 +90,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          additional_info: string | null
+          company_name: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          additional_info?: string | null
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          additional_info?: string | null
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      user_activity: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
