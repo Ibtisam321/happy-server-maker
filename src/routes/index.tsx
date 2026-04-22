@@ -327,6 +327,7 @@ function GeneratorPage({ user }: { user: User }) {
   const [saved, setSaved] = useState<SavedPolicy[]>([]);
   const [savedMsg, setSavedMsg] = useState("");
   const [saving, setSaving] = useState(false);
+  const [savedReviews, setSavedReviews] = useState<Record<string, { status: ReviewStatus; notes: string }>>({});
 
   const update = <K extends keyof FormData>(k: K, v: FormData[K]) =>
     setData((d) => ({ ...d, [k]: v }));
