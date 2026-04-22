@@ -371,13 +371,15 @@ function GeneratorPage({ user }: { user: User }) {
     if (!result) return;
     setSaving(true);
     setSavedMsg("");
-    const { error } = await supabase.from("policies").insert({
-      user_id: user.id,
-      company: data.company,
-      policy_text: result.policy,
-      score: result.score.score,
-      form_data: data as unknown as Record<string, unknown>,
-    });
+    const { error } = await supabase.from("policies").insert([
+      {
+        user_id: user.id,
+        company: data.company,
+        policy_text: result.policy,
+        score: result.score.score,
+        form_data: data as unknown as Record<string, unknown>,
+      },
+    ]);
     setSaving(false);
     if (error) {
       setSavedMsg("Could not save: " + error.message);
