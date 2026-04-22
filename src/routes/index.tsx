@@ -554,24 +554,36 @@ function GeneratorPage({ user }: { user: User }) {
           <ul className="saved-list">
             {saved.map((s) => {
               const cls = s.score >= 80 ? "good" : s.score >= 60 ? "mid" : "bad";
+              const review = savedReviews[s.id];
               return (
-                <li key={s.id}>
-                  <div>
-                    <strong>{s.company}</strong>
-                    <div className="meta">{new Date(s.created_at).toLocaleString("en-GB")}</div>
+                <li key={s.id} style={{ flexDirection: "column", alignItems: "stretch" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center", gap: 8 }}>
+                    <div>
+                      <strong>{s.company}</strong>
+                      <div className="meta">{new Date(s.created_at).toLocaleString("en-GB")}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span className={"score-pill score-" + cls} style={{ background: "var(--bg)" }}>
+                        {s.score}%
+                      </span>
+                      {review && (
+                        <span className={"status-chip status-" + review.status}>
+                          {STATUS_LABEL[review.status]}
+                        </span>
+                      )}
+                      <button
+                        className="secondary nav-btn"
+                        onClick={() => deletePolicy(s.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span className={"score-pill score-" + cls} style={{ background: "var(--bg)" }}>
-                      {s.score}%
-                    </span>
-                    <button
-                      className="secondary"
-                      style={{ width: "auto", marginTop: 0, padding: "6px 10px", fontSize: 12 }}
-                      onClick={() => deletePolicy(s.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  {review && review.notes && (
+                    <div className="reviewer-notes">
+                      <strong>Reviewer notes:</strong> {review.notes}
+                    </div>
+                  )}
                 </li>
               );
             })}
