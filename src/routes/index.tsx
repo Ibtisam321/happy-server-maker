@@ -89,13 +89,34 @@ function ComplyfyPage() {
   return (
     <div className="complyfy-app">
       <header className="site-header">
-        <div className="logo">
+        <div className="logo" style={{ cursor: "pointer" }} onClick={() => setPage(user ? "generator" : "home")}>
           Complyfy<span className="logo-dot"></span>
         </div>
         {user && (
           <div id="headerUser">
+            {isReviewer && (
+              <>
+                <button
+                  className="secondary nav-btn"
+                  onClick={() => setPage("generator")}
+                >
+                  Generator
+                </button>
+                <button
+                  className="secondary nav-btn"
+                  onClick={() => setPage("review")}
+                >
+                  🛡️ Review queue
+                </button>
+              </>
+            )}
             <div className="avatar">{(user.email ?? "U").charAt(0).toUpperCase()}</div>
-            <span>{user.email}</span>
+            <span>
+              {user.email}
+              {isReviewer && (
+                <span className="role-chip">{roles.includes("admin") ? "Admin" : "DPO"}</span>
+              )}
+            </span>
             <button id="logoutBtn" onClick={logout}>
               Sign out
             </button>
@@ -111,6 +132,7 @@ function ComplyfyPage() {
         />
       )}
       {page === "generator" && user && <GeneratorPage user={user} />}
+      {page === "review" && user && isReviewer && <ReviewPage user={user} />}
     </div>
   );
 }
