@@ -400,8 +400,26 @@ function GeneratorPage({ user }: { user: User }) {
     const { data: rows, error } = await supabase
       .from("policies")
       .select("id, company, score, created_at")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    if (!error && rows) setSaved(rows);
+    if (!error && rows) {
+      setSaved(rows);
+      const ids = rows.map((r) => r.id);
+      if (ids.length > 0) {
+        const { data: rev } = await supabase
+          .from("policy_reviews")
+          .select("policy_id, status, notes, updated_at")
+          .in("policy_id", ids)
+          .order("updated_at", { ascending: false });
+        const map: Record<string, { status: ReviewStatus; notes: string }> = {};
+        (rev ?? []).forEach((r) => {
+          if (!map[r.policy_id]) map[r.policy_id] = { status: r.status as ReviewStatus, notes: r.notes };
+        });
+        setSavedReviews(map);
+      } else {
+        setSavedReviews({});
+      }
+    }
   };
 
   useEffect(() => {
