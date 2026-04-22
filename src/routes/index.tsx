@@ -377,7 +377,7 @@ function GeneratorPage({ user }: { user: User }) {
         company: data.company,
         policy_text: result.policy,
         score: result.score.score,
-        form_data: data as unknown as Record<string, unknown>,
+        form_data: data as never,
       },
     ]);
     setSaving(false);
