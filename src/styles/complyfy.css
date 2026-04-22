@@ -148,3 +148,43 @@
   .complyfy-app h1 { font-size: 26px; }
   .complyfy-app .info-grid { grid-template-columns: 1fr; }
 }
+
+/* Admin / DPO review */
+.complyfy-app .nav-btn { width: auto; margin-top: 0; padding: 6px 12px; font-size: 12px; }
+.complyfy-app .role-chip {
+  display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+  background: var(--ink); color: var(--card); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.complyfy-app .review-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0 20px;
+}
+.complyfy-app .review-stats .info-box { padding: 12px; }
+.complyfy-app .review-stats .info-box-value { font-size: 22px; }
+.complyfy-app .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.complyfy-app .filter-chip {
+  padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink); font-size: 12px; cursor: pointer; font-weight: 500;
+}
+.complyfy-app .filter-chip.active { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.complyfy-app .status-chip {
+  display: inline-block; padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+}
+.complyfy-app .status-pending { background: #fff4d6; color: #8a6500; }
+.complyfy-app .status-approved { background: #d6f5e0; color: #056b2c; }
+.complyfy-app .status-changes_requested { background: #ffe1cc; color: #8a3b00; }
+.complyfy-app .status-rejected { background: #ffd6d6; color: #8a0000; }
+.complyfy-app .status-unreviewed { background: var(--bg); color: var(--ink-soft); border: 1px dashed var(--line); }
+.complyfy-app .review-panel {
+  margin-top: 14px; padding: 16px; border: 1px solid var(--line);
+  border-radius: 12px; background: var(--bg);
+}
+.complyfy-app .reviewer-notes {
+  margin-top: 10px; padding: 10px 12px; background: var(--bg);
+  border-left: 3px solid var(--ink); border-radius: 6px;
+  font-size: 13px; color: var(--ink); line-height: 1.5;
+}
+@media (max-width: 500px) {
+  .complyfy-app .review-stats { grid-template-columns: repeat(2, 1fr); }
+}

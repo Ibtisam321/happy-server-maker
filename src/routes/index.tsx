@@ -35,8 +35,9 @@ export const Route = createFileRoute("/")({
   component: ComplyfyPage,
 });
 
-type Page = "home" | "account" | "generator";
+type Page = "home" | "account" | "generator" | "review";
 type AuthMode = "signup" | "login";
+type Role = "admin" | "dpo" | "user";
 
 interface SavedPolicy {
   id: string;
@@ -48,6 +49,7 @@ interface SavedPolicy {
 function ComplyfyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<Page>("home");
+  const [roles, setRoles] = useState<Role[]>([]);
 
   // Auth state restoration — listener BEFORE getSession (per docs)
   useEffect(() => {
@@ -61,6 +63,23 @@ function ComplyfyPage() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // Load roles whenever the user changes
+  useEffect(() => {
+    if (!user) {
+      setRoles([]);
+      return;
+    }
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        setRoles((data ?? []).map((r) => r.role as Role));
+      });
+  }, [user]);
+
+  const isReviewer = roles.includes("admin") || roles.includes("dpo");
+
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -70,13 +89,34 @@ function ComplyfyPage() {
   return (
     <div className="complyfy-app">
       <header className="site-header">
-        <div className="logo">
+        <div className="logo" style={{ cursor: "pointer" }} onClick={() => setPage(user ? "generator" : "home")}>
           Complyfy<span className="logo-dot"></span>
         </div>
         {user && (
           <div id="headerUser">
+            {isReviewer && (
+              <>
+                <button
+                  className="secondary nav-btn"
+                  onClick={() => setPage("generator")}
+                >
+                  Generator
+                </button>
+                <button
+                  className="secondary nav-btn"
+                  onClick={() => setPage("review")}
+                >
+                  🛡️ Review queue
+                </button>
+              </>
+            )}
             <div className="avatar">{(user.email ?? "U").charAt(0).toUpperCase()}</div>
-            <span>{user.email}</span>
+            <span>
+              {user.email}
+              {isReviewer && (
+                <span className="role-chip">{roles.includes("admin") ? "Admin" : "DPO"}</span>
+              )}
+            </span>
             <button id="logoutBtn" onClick={logout}>
               Sign out
             </button>
@@ -92,6 +132,7 @@ function ComplyfyPage() {
         />
       )}
       {page === "generator" && user && <GeneratorPage user={user} />}
+      {page === "review" && user && isReviewer && <ReviewPage user={user} />}
     </div>
   );
 }
@@ -286,6 +327,7 @@ function GeneratorPage({ user }: { user: User }) {
   const [saved, setSaved] = useState<SavedPolicy[]>([]);
   const [savedMsg, setSavedMsg] = useState("");
   const [saving, setSaving] = useState(false);
+  const [savedReviews, setSavedReviews] = useState<Record<string, { status: ReviewStatus; notes: string }>>({});
 
   const update = <K extends keyof FormData>(k: K, v: FormData[K]) =>
     setData((d) => ({ ...d, [k]: v }));
@@ -359,8 +401,26 @@ function GeneratorPage({ user }: { user: User }) {
     const { data: rows, error } = await supabase
       .from("policies")
       .select("id, company, score, created_at")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    if (!error && rows) setSaved(rows);
+    if (!error && rows) {
+      setSaved(rows);
+      const ids = rows.map((r) => r.id);
+      if (ids.length > 0) {
+        const { data: rev } = await supabase
+          .from("policy_reviews")
+          .select("policy_id, status, notes, updated_at")
+          .in("policy_id", ids)
+          .order("updated_at", { ascending: false });
+        const map: Record<string, { status: ReviewStatus; notes: string }> = {};
+        (rev ?? []).forEach((r) => {
+          if (!map[r.policy_id]) map[r.policy_id] = { status: r.status as ReviewStatus, notes: r.notes };
+        });
+        setSavedReviews(map);
+      } else {
+        setSavedReviews({});
+      }
+    }
   };
 
   useEffect(() => {
@@ -494,24 +554,36 @@ function GeneratorPage({ user }: { user: User }) {
           <ul className="saved-list">
             {saved.map((s) => {
               const cls = s.score >= 80 ? "good" : s.score >= 60 ? "mid" : "bad";
+              const review = savedReviews[s.id];
               return (
-                <li key={s.id}>
-                  <div>
-                    <strong>{s.company}</strong>
-                    <div className="meta">{new Date(s.created_at).toLocaleString("en-GB")}</div>
+                <li key={s.id} style={{ flexDirection: "column", alignItems: "stretch" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center", gap: 8 }}>
+                    <div>
+                      <strong>{s.company}</strong>
+                      <div className="meta">{new Date(s.created_at).toLocaleString("en-GB")}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span className={"score-pill score-" + cls} style={{ background: "var(--bg)" }}>
+                        {s.score}%
+                      </span>
+                      {review && (
+                        <span className={"status-chip status-" + review.status}>
+                          {STATUS_LABEL[review.status]}
+                        </span>
+                      )}
+                      <button
+                        className="secondary nav-btn"
+                        onClick={() => deletePolicy(s.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span className={"score-pill score-" + cls} style={{ background: "var(--bg)" }}>
-                      {s.score}%
-                    </span>
-                    <button
-                      className="secondary"
-                      style={{ width: "auto", marginTop: 0, padding: "6px 10px", fontSize: 12 }}
-                      onClick={() => deletePolicy(s.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  {review && review.notes && (
+                    <div className="reviewer-notes">
+                      <strong>Reviewer notes:</strong> {review.notes}
+                    </div>
+                  )}
                 </li>
               );
             })}
@@ -913,6 +985,233 @@ function Step6({ data, update, onBack }: StepProps) {
           Generate policy ✓
         </button>
       </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────  REVIEW (Admin / DPO)  ───────────────────────── */
+
+type ReviewStatus = "pending" | "approved" | "changes_requested" | "rejected";
+
+interface ReviewablePolicy {
+  id: string;
+  company: string;
+  score: number;
+  created_at: string;
+  user_id: string;
+  policy_text: string;
+}
+
+interface PolicyReview {
+  id: string;
+  policy_id: string;
+  reviewer_id: string;
+  status: ReviewStatus;
+  notes: string;
+  updated_at: string;
+}
+
+const STATUS_LABEL: Record<ReviewStatus, string> = {
+  pending: "Pending",
+  approved: "Approved",
+  changes_requested: "Changes requested",
+  rejected: "Rejected",
+};
+
+function ReviewPage({ user }: { user: User }) {
+  const [policies, setPolicies] = useState<ReviewablePolicy[]>([]);
+  const [reviews, setReviews] = useState<PolicyReview[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "unreviewed" | ReviewStatus>("all");
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setLoading(true);
+    const [pRes, rRes] = await Promise.all([
+      supabase
+        .from("policies")
+        .select("id, company, score, created_at, user_id, policy_text")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("policy_reviews")
+        .select("id, policy_id, reviewer_id, status, notes, updated_at")
+        .order("updated_at", { ascending: false }),
+    ]);
+    if (pRes.data) setPolicies(pRes.data as ReviewablePolicy[]);
+    if (rRes.data) setReviews(rRes.data as PolicyReview[]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const latestReviewFor = (policyId: string): PolicyReview | undefined =>
+    reviews.find((r) => r.policy_id === policyId);
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return policies;
+    if (filter === "unreviewed") return policies.filter((p) => !latestReviewFor(p.id));
+    return policies.filter((p) => latestReviewFor(p.id)?.status === filter);
+  }, [policies, reviews, filter]);
+
+  const stats = useMemo(() => {
+    const counts = { total: policies.length, unreviewed: 0, approved: 0, changes_requested: 0, rejected: 0, pending: 0 };
+    for (const p of policies) {
+      const r = latestReviewFor(p.id);
+      if (!r) counts.unreviewed++;
+      else counts[r.status]++;
+    }
+    return counts;
+  }, [policies, reviews]);
+
+  return (
+    <div className="container">
+      <div className="card">
+        <h2>🛡️ Review queue</h2>
+        <p>
+          As an admin or Data Protection Officer, you can review every policy generated by users,
+          flag issues, and record an approval decision.
+        </p>
+
+        <div className="review-stats">
+          <div className="info-box"><div className="info-box-label">Total</div><div className="info-box-value">{stats.total}</div></div>
+          <div className="info-box"><div className="info-box-label">Unreviewed</div><div className="info-box-value">{stats.unreviewed}</div></div>
+          <div className="info-box"><div className="info-box-label">Approved</div><div className="info-box-value">{stats.approved}</div></div>
+          <div className="info-box"><div className="info-box-label">Changes req.</div><div className="info-box-value">{stats.changes_requested}</div></div>
+        </div>
+
+        <div className="filter-row">
+          {(["all", "unreviewed", "pending", "approved", "changes_requested", "rejected"] as const).map((f) => (
+            <button
+              key={f}
+              className={"filter-chip" + (filter === f ? " active" : "")}
+              onClick={() => setFilter(f)}
+              type="button"
+            >
+              {f === "all" ? "All" : f === "unreviewed" ? "Unreviewed" : STATUS_LABEL[f]}
+            </button>
+          ))}
+        </div>
+
+        {loading ? (
+          <p>Loading…</p>
+        ) : filtered.length === 0 ? (
+          <p>No policies match this filter.</p>
+        ) : (
+          <ul className="saved-list">
+            {filtered.map((p) => {
+              const r = latestReviewFor(p.id);
+              const cls = p.score >= 80 ? "good" : p.score >= 60 ? "mid" : "bad";
+              return (
+                <li key={p.id} style={{ flexDirection: "column", alignItems: "stretch" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center", gap: 8 }}>
+                    <div>
+                      <strong>{p.company}</strong>
+                      <div className="meta">
+                        {new Date(p.created_at).toLocaleString("en-GB")} · user {p.user_id.slice(0, 8)}…
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span className={"score-pill score-" + cls} style={{ background: "var(--bg)" }}>
+                        {p.score}%
+                      </span>
+                      {r ? (
+                        <span className={"status-chip status-" + r.status}>{STATUS_LABEL[r.status]}</span>
+                      ) : (
+                        <span className="status-chip status-unreviewed">Unreviewed</span>
+                      )}
+                      <button
+                        className="secondary nav-btn"
+                        onClick={() => setOpenId(openId === p.id ? null : p.id)}
+                        type="button"
+                      >
+                        {openId === p.id ? "Close" : "Open"}
+                      </button>
+                    </div>
+                  </div>
+                  {openId === p.id && (
+                    <ReviewPanel
+                      policy={p}
+                      existing={r}
+                      reviewerId={user.id}
+                      onSaved={load}
+                    />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ReviewPanel({
+  policy,
+  existing,
+  reviewerId,
+  onSaved,
+}: {
+  policy: ReviewablePolicy;
+  existing: PolicyReview | undefined;
+  reviewerId: string;
+  onSaved: () => void;
+}) {
+  const [status, setStatus] = useState<ReviewStatus>(existing?.status ?? "pending");
+  const [notes, setNotes] = useState(existing?.notes ?? "");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const submit = async () => {
+    setBusy(true);
+    setMsg("");
+    let error;
+    if (existing) {
+      ({ error } = await supabase
+        .from("policy_reviews")
+        .update({ status, notes })
+        .eq("id", existing.id));
+    } else {
+      ({ error } = await supabase
+        .from("policy_reviews")
+        .insert([{ policy_id: policy.id, reviewer_id: reviewerId, status, notes }]));
+    }
+    setBusy(false);
+    if (error) {
+      setMsg("Could not save: " + error.message);
+    } else {
+      setMsg("✓ Review saved.");
+      onSaved();
+    }
+  };
+
+  return (
+    <div className="review-panel">
+      <div className="output" style={{ maxHeight: 320, overflowY: "auto" }}>{policy.policy_text}</div>
+
+      <div className="field">
+        <label>Decision</label>
+        <select value={status} onChange={(e) => setStatus(e.target.value as ReviewStatus)}>
+          <option value="pending">Pending — still reviewing</option>
+          <option value="approved">Approved — compliant</option>
+          <option value="changes_requested">Changes requested</option>
+          <option value="rejected">Rejected — not compliant</option>
+        </select>
+      </div>
+      <div className="field">
+        <label>Reviewer notes</label>
+        <textarea
+          placeholder="Cite UK GDPR articles, missing sections, or recommendations for the policy owner..."
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+        />
+      </div>
+      <button className="primary" onClick={submit} disabled={busy} type="button">
+        {busy ? "Saving…" : existing ? "Update review" : "Submit review"}
+      </button>
+      {msg && <div className={msg.startsWith("✓") ? "auth-info" : "auth-error"}>{msg}</div>}
     </div>
   );
 }
