@@ -19,7 +19,15 @@
   --transition: 0.18s ease;
 }
 .complyfy-app *, .complyfy-app *::before, .complyfy-app *::after { box-sizing: border-box; margin: 0; padding: 0; }
-.complyfy-app { font-family: var(--font-body); background: var(--bg); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.65; }
+.complyfy-app {
+  font-family: var(--font-body); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.65;
+  background:
+    radial-gradient(1200px 600px at -10% -20%, rgba(233,255,71,0.30), transparent 60%),
+    radial-gradient(900px 600px at 110% 10%, rgba(178,196,255,0.45), transparent 55%),
+    radial-gradient(800px 600px at 50% 110%, rgba(255,196,233,0.35), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
 .complyfy-app .hidden { display: none !important; }
 
 .complyfy-app .site-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
@@ -188,3 +196,49 @@
 @media (max-width: 500px) {
   .complyfy-app .review-stats { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Recommendations, toolbox, profile, history, admin ── */
+.complyfy-app .rec-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.complyfy-app .rec-list li {
+  background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 10px 14px; border-radius: 8px; font-size: 13px; color: var(--ink); line-height: 1.5;
+}
+.complyfy-app .form-intro {
+  background: linear-gradient(135deg, rgba(26,26,46,0.04), rgba(233,255,71,0.18));
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 20px; font-size: 13px; color: var(--ink); line-height: 1.55;
+}
+.complyfy-app .toolbox-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
+.complyfy-app .toolbox-item {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.complyfy-app .toolbox-item summary {
+  cursor: pointer; font-weight: 600; font-size: 14px; color: var(--ink);
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; list-style: none;
+}
+.complyfy-app .toolbox-item summary::-webkit-details-marker { display: none; }
+.complyfy-app .toolbox-item summary::after { content: '+'; color: var(--accent); font-weight: 700; }
+.complyfy-app .toolbox-item[open] summary::after { content: '−'; }
+.complyfy-app .toolbox-item .short { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: 8px; }
+.complyfy-app .toolbox-item p { margin-top: 8px; font-size: 13px; color: var(--ink); line-height: 1.55; }
+
+.complyfy-app .admin-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+.complyfy-app .admin-table th, .complyfy-app .admin-table td {
+  text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border);
+}
+.complyfy-app .admin-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); font-weight: 700; }
+.complyfy-app .admin-table select { padding: 6px 28px 6px 8px; font-size: 12px; }
+.complyfy-app .activity-list { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.complyfy-app .activity-list li {
+  display: flex; justify-content: space-between; gap: 10px; padding: 8px 12px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 12px;
+}
+.complyfy-app .activity-list .action { font-weight: 600; color: var(--ink); }
+.complyfy-app .activity-list .when { color: var(--muted); }
+
+.complyfy-app .signup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 500px) { .complyfy-app .signup-grid { grid-template-columns: 1fr; } }
+
+.complyfy-app .history-detail { margin-top: 10px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+
