@@ -1,5 +1,4 @@
-// Complyfy policy generation + scoring logic.
-// Preserved from the original HTML script with minor TS typing.
+// Complyfy policy generation, scoring & recommendation engine.
 
 export interface FormData {
   company: string;
@@ -31,46 +30,104 @@ export interface ScoreResult {
   risks: RiskTag[];
   positives: RiskTag[];
   riskLevel: "low" | "medium" | "high";
+  recommendations: string[];
 }
 
 export function calculateScore(d: FormData): ScoreResult {
   let score = 100;
   const risks: RiskTag[] = [];
   const positives: RiskTag[] = [];
+  const recommendations: string[] = [];
 
-  // Improved per spec: sensitive -30, marketing cookies -15, long retention -10
+  // ── Risk-based deductions ──────────────────────────────────────────
   if (d.dataTypes.some((t) => t.includes("Special category"))) {
     score -= 30;
     risks.push({ label: "Special category data (-30)", type: "bad" });
+    recommendations.push(
+      "You process special category data — conduct a Data Protection Impact Assessment (DPIA) under UK GDPR Article 35, and document an explicit Article 9 lawful basis.",
+    );
   }
   if (d.dataTypes.some((t) => t.includes("Payment"))) {
     score -= 10;
     risks.push({ label: "Payment data — ensure PCI-DSS", type: "warn" });
+    recommendations.push(
+      "Ensure your payment processor is PCI-DSS compliant and that card data never touches your own servers.",
+    );
   }
   if (d.cookies === "marketing" || d.cookies === "all") {
     score -= 15;
     risks.push({ label: "Marketing cookies (-15) — consent required", type: "warn" });
+    recommendations.push(
+      "Implement a PECR-compliant cookie banner with granular opt-in for marketing cookies and an easy way to withdraw consent.",
+    );
+  } else if (d.cookies === "analytics") {
+    recommendations.push(
+      "Analytics cookies still need explicit consent under PECR — make sure your cookie banner blocks them by default.",
+    );
   }
   if (d.retention === "Over 6 years (legal / financial records)") {
     score -= 10;
     risks.push({ label: "Long retention period (-10)", type: "warn" });
+    recommendations.push(
+      "Document why you retain data over 6 years (e.g. HMRC requirements) to satisfy the storage limitation principle.",
+    );
   }
   if (d.thirdParties.some((t) => t.includes("Advertising"))) {
     score -= 10;
     risks.push({ label: "Ad networks — review data sharing", type: "warn" });
+    recommendations.push(
+      "Sign a Data Processing Agreement with each advertising network and disclose the categories of data shared.",
+    );
   }
   if (d.transfersOutsideUK === "unsure") {
     score -= 5;
     risks.push({ label: "International transfers unclear", type: "warn" });
+    recommendations.push(
+      "Audit your processors and confirm whether data leaves the UK; document an adequacy decision or Standard Contractual Clauses for any transfers.",
+    );
   }
   if (d.automatedDecisions === "automated") {
     score -= 10;
     risks.push({ label: "Automated decisions — Article 22 applies", type: "bad" });
+    recommendations.push(
+      "Provide users with a human-review pathway for any automated decisions that significantly affect them (UK GDPR Article 22).",
+    );
   }
   if (d.childrenData === "yes") {
     score -= 10;
     risks.push({ label: "Children's data — AADC applies", type: "bad" });
+    recommendations.push(
+      "Comply with the ICO's Age Appropriate Design Code: verify parental consent and apply high-privacy defaults for under-13s.",
+    );
   }
+
+  // ── Missing-explanation deductions ────────────────────────────────
+  if (d.legal === "Legitimate interests" && !d.legitExplain.trim()) {
+    score -= 10;
+    risks.push({ label: "Missing legitimate interest explanation (-10)", type: "bad" });
+    recommendations.push(
+      "Document your Legitimate Interests Assessment (LIA) — purpose, necessity, and balancing test against individual rights.",
+    );
+  }
+  if (!d.securityMeasures.trim()) {
+    score -= 5;
+    risks.push({ label: "Security measures not documented (-5)", type: "warn" });
+    recommendations.push(
+      "Document your technical and organisational security measures — encryption, access controls, MFA, staff training and breach response.",
+    );
+  }
+  if (!d.ico) {
+    recommendations.push(
+      "Most UK businesses processing personal data must register with the ICO and pay the data protection fee.",
+    );
+  }
+  if (!d.dpo && d.dataTypes.some((t) => t.includes("Special category"))) {
+    recommendations.push(
+      "Processing special category data at scale typically requires appointing a Data Protection Officer (UK GDPR Article 37).",
+    );
+  }
+
+  // ── Positives ─────────────────────────────────────────────────────
   if (d.ico) positives.push({ label: "ICO registered ✓", type: "good" });
   if (d.dpo) positives.push({ label: "DPO named ✓", type: "good" });
   if (d.securityMeasures) positives.push({ label: "Security documented ✓", type: "good" });
@@ -79,10 +136,28 @@ export function calculateScore(d: FormData): ScoreResult {
   const riskLevel: ScoreResult["riskLevel"] =
     finalScore >= 80 ? "low" : finalScore >= 60 ? "medium" : "high";
 
-  return { score: finalScore, risks, positives, riskLevel };
+  // Always-relevant baseline recommendations
+  recommendations.push(
+    "Maintain a Record of Processing Activities (ROPA) under UK GDPR Article 30 — even small businesses benefit from this.",
+  );
+  recommendations.push(
+    "Establish a documented data breach response plan: ICO must be notified within 72 hours of a notifiable breach.",
+  );
+
+  return { score: finalScore, risks, positives, riskLevel, recommendations };
 }
 
-export function generatePolicy(d: FormData): string {
+const GDPR_PRINCIPLES_TEXT = `The seven UK GDPR principles guide all our processing:
+
+  1. Lawfulness, fairness and transparency — we process data on a clear lawful basis and tell you what we do.
+  2. Purpose limitation — we collect data only for the specified purposes set out below.
+  3. Data minimisation — we collect only what is necessary for those purposes.
+  4. Accuracy — we keep your data up to date and correct it on request.
+  5. Storage limitation — we retain data only for as long as needed.
+  6. Integrity and confidentiality — we protect data with appropriate technical and organisational measures.
+  7. Accountability — we document our compliance and can demonstrate it on request.`;
+
+export function generatePolicy(d: FormData, score?: ScoreResult): string {
   const date = new Date().toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
@@ -125,6 +200,11 @@ export function generatePolicy(d: FormData): string {
       "Our services are intended for users aged 18 and over. We do not knowingly collect personal data from minors.",
   };
 
+  const recsBlock =
+    score && score.recommendations.length > 0
+      ? `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nINTERNAL COMPLIANCE RECOMMENDATIONS\n(For your records — not for publication)\n\n${score.recommendations.map((r, i) => `  ${i + 1}. ${r}`).join("\n")}\n`
+      : "";
+
   return `PRIVACY POLICY
 Last updated: ${date}${d.website ? "\nWebsite: " + d.website : ""}${d.ico ? "\nICO Registration: " + d.ico : ""}
 
@@ -138,13 +218,19 @@ Contact: ${d.email}${d.dpo ? "\nData Protection Officer: " + d.dpo : ""}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-2. WHAT DATA WE COLLECT
+2. OUR DATA PROTECTION PRINCIPLES
+
+${GDPR_PRINCIPLES_TEXT}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. WHAT DATA WE COLLECT
 
 ${d.dataTypes.map((t) => "  • " + t).join("\n")}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-3. WHY WE COLLECT YOUR DATA (PURPOSE OF PROCESSING)
+4. WHY WE COLLECT YOUR DATA (PURPOSE OF PROCESSING)
 
 Under UK GDPR we must clearly explain the specific purpose for which we use your personal data. We collect and process your data for the following purposes:
 
@@ -154,7 +240,7 @@ We will not use your personal data for any new, incompatible purpose without fir
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-4. LEGAL BASIS FOR PROCESSING
+5. LEGAL BASIS FOR PROCESSING
 
 Under UK GDPR Article 6, every processing activity must have one of six lawful bases:
 
@@ -175,7 +261,7 @@ Our lawful basis for processing your personal data is:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-5. WHO WE SHARE YOUR DATA WITH (THIRD-PARTY SHARING)
+6. WHO WE SHARE YOUR DATA WITH (THIRD-PARTY SHARING)
 
 We share your personal data only with the following categories of third-party processors, each engaged under a written data processing agreement:
 
@@ -185,19 +271,19 @@ We require all third-party processors to comply with UK data protection law. We 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-6. INTERNATIONAL DATA TRANSFERS
+7. INTERNATIONAL DATA TRANSFERS
 
 ${transferText[d.transfersOutsideUK] || ""}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-7. COOKIES AND TRACKING
+8. COOKIES AND TRACKING
 
 ${cookieText[d.cookies] || ""}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-8. HOW LONG WE KEEP YOUR DATA
+9. HOW LONG WE KEEP YOUR DATA
 
 We retain personal data for: ${d.retention}.
 
@@ -205,25 +291,25 @@ After this period, data will be securely deleted or anonymised unless retention 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-9. HOW WE PROTECT YOUR DATA
+10. HOW WE PROTECT YOUR DATA
 
 ${d.securityMeasures || "We implement appropriate technical and organisational measures to protect personal data against unauthorised access, alteration, disclosure, or destruction, including access controls, secure connections (TLS), and regular security reviews."}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-10. AUTOMATED DECISION-MAKING
+11. AUTOMATED DECISION-MAKING
 
 ${automatedText[d.automatedDecisions] || ""}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-11. CHILDREN'S DATA
+12. CHILDREN'S DATA
 
 ${childrenText[d.childrenData] || ""}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-12. YOUR RIGHTS UNDER UK GDPR (IN PLAIN ENGLISH)
+13. YOUR RIGHTS UNDER UK GDPR (IN PLAIN ENGLISH)
 
 You have the following rights regarding your personal data:
 
@@ -241,7 +327,7 @@ We will respond within one calendar month.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-13. HOW TO COMPLAIN
+14. HOW TO COMPLAIN
 
 You have the right to lodge a complaint with the UK supervisory authority — the Information Commissioner's Office (ICO) — if you believe we have not handled your personal data in accordance with the law:
 
@@ -254,19 +340,19 @@ We would welcome the opportunity to resolve any concerns directly — please con
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-14. CHANGES TO THIS POLICY
+15. CHANGES TO THIS POLICY
 
 When we update this policy we will: ${d.policyUpdateMethod}.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-15. APPLICABLE LAW
+16. APPLICABLE LAW
 
 This policy complies with:
   • UK General Data Protection Regulation (UK GDPR)
   • Data Protection Act 2018
   • Privacy and Electronic Communications Regulations (PECR)
-${d.additionalInfo ? "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n16. ADDITIONAL INFORMATION\n\n" + d.additionalInfo + "\n" : ""}
+${d.additionalInfo ? "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n17. ADDITIONAL INFORMATION\n\n" + d.additionalInfo + "\n" : ""}${recsBlock}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 © ${new Date().getFullYear()} ${d.company}. All rights reserved.`;
 }
@@ -319,8 +405,11 @@ export function validateStep(step: number, d: FormData): string | null {
       return "Please describe your legitimate interest (required).";
     }
   }
+  if (step === 4) {
+    if (d.thirdParties.length === 0)
+      return "Select at least one third-party option (or 'No third parties').";
+  }
   if (step === 6) {
-    // Final full-form check before generation
     if (!d.company.trim() || !EMAIL_RE.test(d.email.trim()))
       return "Company and a valid email are required.";
     if (d.dataTypes.length === 0) return "Select at least one data type.";
@@ -331,3 +420,62 @@ export function validateStep(step: number, d: FormData): string | null {
   }
   return null;
 }
+
+/* ─────────────────────────  GDPR TOOLBOX  ───────────────────────── */
+
+export interface ToolboxEntry {
+  term: string;
+  short: string;
+  detail: string;
+}
+
+export const TOOLBOX: ToolboxEntry[] = [
+  {
+    term: "Personal data",
+    short: "Any info that identifies a person.",
+    detail:
+      "Personal data is any information relating to an identified or identifiable individual — name, email, IP address, photos, even an order number tied to a customer. If it can single someone out, it counts.",
+  },
+  {
+    term: "Legal basis",
+    short: "Your justification for using data.",
+    detail:
+      "Under UK GDPR Article 6, every processing activity needs one of six lawful bases: Consent, Contract, Legal obligation, Vital interests, Public task, or Legitimate interests. Pick the one that best fits why you collect each type of data.",
+  },
+  {
+    term: "Legitimate interests",
+    short: "Useful but requires a balancing test.",
+    detail:
+      "You can rely on Legitimate Interests if you have a real business need that isn't outweighed by the user's rights. You must document a Legitimate Interests Assessment (LIA) covering purpose, necessity and balance.",
+  },
+  {
+    term: "Cookies & PECR",
+    short: "Non-essential cookies need consent.",
+    detail:
+      "PECR (Privacy and Electronic Communications Regulations) requires explicit, informed consent before setting any non-essential cookie — analytics and marketing included. A pre-ticked box is not consent.",
+  },
+  {
+    term: "Data retention",
+    short: "Keep data only as long as needed.",
+    detail:
+      "The storage limitation principle means you must define how long you keep each category of data and delete or anonymise it afterwards. Keep records of why each retention period is justified.",
+  },
+  {
+    term: "Special category data",
+    short: "Sensitive data — extra protection.",
+    detail:
+      "Health, ethnicity, religion, sexuality, biometrics and political opinions need an Article 9 condition on top of your Article 6 lawful basis. Processing this at scale usually triggers a DPIA.",
+  },
+  {
+    term: "DPIA",
+    short: "Risk assessment for high-risk processing.",
+    detail:
+      "A Data Protection Impact Assessment is mandatory under Article 35 when processing is likely to result in high risk to individuals — e.g. large-scale profiling, sensitive data, or new tech.",
+  },
+  {
+    term: "ICO",
+    short: "The UK's data protection regulator.",
+    detail:
+      "The Information Commissioner's Office enforces UK data protection law. Most data-processing businesses must register and pay the data protection fee, and breaches must be reported within 72 hours.",
+  },
+];
