@@ -36,7 +36,7 @@ export const Route = createFileRoute("/")({
   component: ComplyfyPage,
 });
 
-type Page = "home" | "account" | "generator" | "review" | "profile" | "admin" | "history" | "toolbox";
+type Page = "home" | "account" | "generator" | "review" | "profile" | "admin" | "history" | "toolbox" | "analytics";
 type AuthMode = "signup" | "login";
 type Role = "admin" | "dpo" | "user";
 
@@ -110,6 +110,9 @@ function ComplyfyPage() {
             {isReviewer && (
               <button className="secondary nav-btn" onClick={() => setPage("review")}>🛡️ Review</button>
             )}
+            {isReviewer && (
+              <button className="secondary nav-btn" onClick={() => setPage("analytics")}>📊 Analytics</button>
+            )}
             {isAdmin && (
               <button className="secondary nav-btn" onClick={() => setPage("admin")}>⚙ Admin</button>
             )}
@@ -132,6 +135,7 @@ function ComplyfyPage() {
       {page === "profile" && user && <ProfilePage user={user} />}
       {page === "toolbox" && <ToolboxPage />}
       {page === "review" && user && isReviewer && <ReviewPage user={user} />}
+      {page === "analytics" && user && isReviewer && <AnalyticsPage />}
       {page === "admin" && user && isAdmin && <AdminPage />}
     </div>
   );
