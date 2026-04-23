@@ -883,7 +883,10 @@ function Step2({ data, update, toggleArray, onBack, onNext }: StepProps) {
         <span>Only collect data you actually need. Data minimisation is a core UK GDPR principle.</span>
       </div>
       <div className="field">
-        <label>Types of personal data collected <span className="badge req">Select all that apply</span></label>
+        <label>Types of personal data collected{" "}
+          <Tooltip text="Personal data is any information that can identify someone — names, emails, IP addresses, even an order number tied to a customer. Tick everything that applies; sensitive (special category) data triggers stricter rules." />
+          <span className="badge req">Select all that apply</span>
+        </label>
         <CheckGroup values={data.dataTypes} options={DATA_TYPES} onToggle={(v) => toggleArray!("dataTypes", v)} />
       </div>
       <div className="field">

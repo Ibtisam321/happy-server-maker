@@ -41,8 +41,8 @@ export function calculateScore(d: FormData): ScoreResult {
 
   // ── Risk-based deductions ──────────────────────────────────────────
   if (d.dataTypes.some((t) => t.includes("Special category"))) {
-    score -= 30;
-    risks.push({ label: "Special category data (-30)", type: "bad" });
+    score -= 20;
+    risks.push({ label: "Sensitive data collected (-20) — ensure safeguards are in place", type: "bad" });
     recommendations.push(
       "You process special category data — conduct a Data Protection Impact Assessment (DPIA) under UK GDPR Article 35, and document an explicit Article 9 lawful basis.",
     );
@@ -55,8 +55,8 @@ export function calculateScore(d: FormData): ScoreResult {
     );
   }
   if (d.cookies === "marketing" || d.cookies === "all") {
-    score -= 15;
-    risks.push({ label: "Marketing cookies (-15) — consent required", type: "warn" });
+    score -= 10;
+    risks.push({ label: "Marketing cookies (-10) — consent required", type: "warn" });
     recommendations.push(
       "Implement a PECR-compliant cookie banner with granular opt-in for marketing cookies and an easy way to withdraw consent.",
     );
@@ -66,10 +66,26 @@ export function calculateScore(d: FormData): ScoreResult {
     );
   }
   if (d.retention === "Over 6 years (legal / financial records)") {
-    score -= 10;
-    risks.push({ label: "Long retention period (-10)", type: "warn" });
+    score -= 15;
+    risks.push({ label: "Long retention period (-15) — justify under storage limitation", type: "warn" });
     recommendations.push(
       "Document why you retain data over 6 years (e.g. HMRC requirements) to satisfy the storage limitation principle.",
+    );
+  }
+  if (!d.legal || !d.legal.trim()) {
+    score -= 30;
+    risks.push({ label: "No legal basis selected (-30) — UK GDPR requires one", type: "bad" });
+    recommendations.push(
+      "Select one of the six UK GDPR Article 6 lawful bases — processing without a valid legal basis is unlawful.",
+    );
+  }
+  // Third-party sharing without an explanation note in additionalInfo / securityMeasures
+  const sharesWithThirdParties = d.thirdParties.some((t) => !t.startsWith("No third parties"));
+  if (sharesWithThirdParties && !d.additionalInfo.trim() && !d.securityMeasures.trim()) {
+    score -= 10;
+    risks.push({ label: "Third-party sharing without explanation (-10)", type: "warn" });
+    recommendations.push(
+      "Document why each third party receives data and what safeguards apply — add details in the 'Additional information' or 'Security measures' fields.",
     );
   }
   if (d.thirdParties.some((t) => t.includes("Advertising"))) {
