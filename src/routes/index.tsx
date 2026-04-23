@@ -36,7 +36,7 @@ export const Route = createFileRoute("/")({
   component: ComplyfyPage,
 });
 
-type Page = "home" | "account" | "generator" | "review" | "profile" | "admin" | "history" | "toolbox";
+type Page = "home" | "account" | "generator" | "review" | "profile" | "admin" | "history" | "toolbox" | "analytics";
 type AuthMode = "signup" | "login";
 type Role = "admin" | "dpo" | "user";
 
@@ -110,6 +110,9 @@ function ComplyfyPage() {
             {isReviewer && (
               <button className="secondary nav-btn" onClick={() => setPage("review")}>🛡️ Review</button>
             )}
+            {isReviewer && (
+              <button className="secondary nav-btn" onClick={() => setPage("analytics")}>📊 Analytics</button>
+            )}
             {isAdmin && (
               <button className="secondary nav-btn" onClick={() => setPage("admin")}>⚙ Admin</button>
             )}
@@ -132,6 +135,7 @@ function ComplyfyPage() {
       {page === "profile" && user && <ProfilePage user={user} />}
       {page === "toolbox" && <ToolboxPage />}
       {page === "review" && user && isReviewer && <ReviewPage user={user} />}
+      {page === "analytics" && user && isReviewer && <AnalyticsPage />}
       {page === "admin" && user && isAdmin && <AdminPage />}
     </div>
   );
@@ -791,6 +795,101 @@ function AdminPage() {
   );
 }
 
+/* ─────────────────────────  ANALYTICS (DPO / Admin)  ───────────────────────── */
+
+interface AnalyticsPolicy {
+  id: string;
+  company: string;
+  score: number;
+  risk_level: string;
+  created_at: string;
+  recommendations: string[] | null;
+}
+
+function AnalyticsPage() {
+  const [policies, setPolicies] = useState<AnalyticsPolicy[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("policies")
+      .select("id, company, score, risk_level, created_at, recommendations")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        setPolicies((data ?? []) as AnalyticsPolicy[]);
+        setLoading(false);
+      });
+  }, []);
+
+  const stats = useMemo(() => {
+    const total = policies.length;
+    const avg = total ? Math.round(policies.reduce((s, p) => s + p.score, 0) / total) : 0;
+    const low = policies.filter((p) => p.score >= 80).length;
+    const medium = policies.filter((p) => p.score >= 50 && p.score < 80).length;
+    const high = policies.filter((p) => p.score < 50).length;
+    return { total, avg, low, medium, high };
+  }, [policies]);
+
+  const topRecommendations = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of policies) {
+      for (const r of p.recommendations ?? []) {
+        counts.set(r, (counts.get(r) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [policies]);
+
+  const highRisk = policies.filter((p) => p.score < 50);
+
+  return (
+    <div className="container">
+      <div className="card">
+        <h2>📊 Compliance analytics</h2>
+        <p>Aggregate risk view across every policy generated on the platform — for Data Protection Officers and admins.</p>
+
+        <div className="review-stats">
+          <div className="info-box"><div className="info-box-label">Total policies</div><div className="info-box-value">{stats.total}</div></div>
+          <div className="info-box"><div className="info-box-label">Average score</div><div className="info-box-value">{stats.avg}%</div></div>
+          <div className="info-box"><div className="info-box-label">Low risk</div><div className="info-box-value">{stats.low}</div></div>
+          <div className="info-box"><div className="info-box-label">Medium risk</div><div className="info-box-value">{stats.medium}</div></div>
+          <div className="info-box"><div className="info-box-label">High risk</div><div className="info-box-value">{stats.high}</div></div>
+        </div>
+
+        {loading ? <p>Loading…</p> : (
+          <>
+            <hr className="section-divider" />
+            <h3>🚨 High-risk policies (&lt; 50%)</h3>
+            {highRisk.length === 0 ? <p>No high-risk policies — well done.</p> : (
+              <ul className="saved-list">
+                {highRisk.map((p) => (
+                  <li key={p.id}>
+                    <div>
+                      <strong>{p.company}</strong>
+                      <div className="meta">{new Date(p.created_at).toLocaleString("en-GB")} · risk {p.risk_level}</div>
+                    </div>
+                    <span className="score-pill score-bad" style={{ background: "var(--bg)" }}>{p.score}%</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <hr className="section-divider" />
+            <h3>📋 Most common recommendations</h3>
+            {topRecommendations.length === 0 ? <p>No recommendations recorded yet.</p> : (
+              <ul className="rec-list">
+                {topRecommendations.map(([text, count]) => (
+                  <li key={text}><strong>×{count}</strong> — {text}</li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─────────────────────────  STEP COMPONENTS  ───────────────────────── */
 
 type StepProps = {
@@ -883,7 +982,10 @@ function Step2({ data, update, toggleArray, onBack, onNext }: StepProps) {
         <span>Only collect data you actually need. Data minimisation is a core UK GDPR principle.</span>
       </div>
       <div className="field">
-        <label>Types of personal data collected <span className="badge req">Select all that apply</span></label>
+        <label>Types of personal data collected{" "}
+          <Tooltip text="Personal data is any information that can identify someone — names, emails, IP addresses, even an order number tied to a customer. Tick everything that applies; sensitive (special category) data triggers stricter rules." />
+          <span className="badge req">Select all that apply</span>
+        </label>
         <CheckGroup values={data.dataTypes} options={DATA_TYPES} onToggle={(v) => toggleArray!("dataTypes", v)} />
       </div>
       <div className="field">
