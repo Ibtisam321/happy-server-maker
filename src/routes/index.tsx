@@ -191,6 +191,7 @@ function AccountPage({ onAuthed, onBack }: { onAuthed: () => void; onBack: () =>
   const [username, setUsername] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState("");
+  const [accountType, setAccountType] = useState<"user" | "dpo">("user");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
@@ -225,6 +226,12 @@ function AccountPage({ onAuthed, onBack }: { onAuthed: () => void; onBack: () =>
         if (e) return setError(e.message);
         const { data } = await supabase.auth.getSession();
         if (data.session) {
+          // If user picked DPO, upgrade their role (trigger seeds 'user' by default).
+          // Admin is intentionally NOT self-selectable for security — promote via Admin dashboard.
+          if (accountType === "dpo") {
+            await supabase.from("user_roles").delete().eq("user_id", data.session.user.id);
+            await supabase.from("user_roles").insert([{ user_id: data.session.user.id, role: "dpo" }]);
+          }
           await logActivity(data.session.user.id, "signup");
           onAuthed();
         } else setInfo("Account created. Please check your email to confirm.");
@@ -275,6 +282,18 @@ function AccountPage({ onAuthed, onBack }: { onAuthed: () => void; onBack: () =>
               <option>Charity / non-profit</option>
               <option>Other</option>
             </select>
+          </div>
+        )}
+        {mode === "signup" && (
+          <div className="field">
+            <label>Account type</label>
+            <select value={accountType} onChange={(e) => setAccountType(e.target.value as "user" | "dpo")}>
+              <option value="user">User — Generate &amp; manage your own policies</option>
+              <option value="dpo">Data Protection Officer — Review all policies, compliance scores &amp; risk reports</option>
+            </select>
+            <small style={{ display: "block", marginTop: 6, opacity: 0.7, fontSize: 12 }}>
+              Admin accounts can only be granted by an existing admin from the Admin dashboard.
+            </small>
           </div>
         )}
 
