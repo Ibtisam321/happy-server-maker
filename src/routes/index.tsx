@@ -226,6 +226,12 @@ function AccountPage({ onAuthed, onBack }: { onAuthed: () => void; onBack: () =>
         if (e) return setError(e.message);
         const { data } = await supabase.auth.getSession();
         if (data.session) {
+          // If user picked DPO, upgrade their role (trigger seeds 'user' by default).
+          // Admin is intentionally NOT self-selectable for security — promote via Admin dashboard.
+          if (accountType === "dpo") {
+            await supabase.from("user_roles").delete().eq("user_id", data.session.user.id);
+            await supabase.from("user_roles").insert([{ user_id: data.session.user.id, role: "dpo" }]);
+          }
           await logActivity(data.session.user.id, "signup");
           onAuthed();
         } else setInfo("Account created. Please check your email to confirm.");
