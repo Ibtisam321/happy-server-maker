@@ -284,6 +284,18 @@ function AccountPage({ onAuthed, onBack }: { onAuthed: () => void; onBack: () =>
             </select>
           </div>
         )}
+        {mode === "signup" && (
+          <div className="field">
+            <label>Account type</label>
+            <select value={accountType} onChange={(e) => setAccountType(e.target.value as "user" | "dpo")}>
+              <option value="user">User — Generate &amp; manage your own policies</option>
+              <option value="dpo">Data Protection Officer — Review all policies, compliance scores &amp; risk reports</option>
+            </select>
+            <small style={{ display: "block", marginTop: 6, opacity: 0.7, fontSize: 12 }}>
+              Admin accounts can only be granted by an existing admin from the Admin dashboard.
+            </small>
+          </div>
+        )}
 
         <div className="field">
           <label htmlFor="email">Email</label>
