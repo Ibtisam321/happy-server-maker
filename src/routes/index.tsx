@@ -191,6 +191,7 @@ function AccountPage({ onAuthed, onBack }: { onAuthed: () => void; onBack: () =>
   const [username, setUsername] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState("");
+  const [accountType, setAccountType] = useState<"user" | "dpo">("user");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
