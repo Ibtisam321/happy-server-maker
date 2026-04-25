@@ -59,6 +59,9 @@ function ComplyfyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<Page>("home");
   const [roles, setRoles] = useState<Role[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const goTo = (p: Page) => { setPage(p); setMenuOpen(false); };
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
