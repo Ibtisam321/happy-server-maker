@@ -30,23 +30,22 @@
 }
 .complyfy-app .hidden { display: none !important; }
 
-.complyfy-app .site-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 16px; min-height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 8px; }
+.complyfy-app .site-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 16px; min-height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; gap: 8px; }
 .complyfy-app .logo { font-family: var(--font-display); font-weight: 800; font-size: 19px; letter-spacing: -0.5px; color: var(--accent); display: flex; align-items: center; flex-shrink: 0; }
 .complyfy-app .logo-dot { display: inline-block; width: 7px; height: 7px; background: var(--yellow); border-radius: 50%; margin-left: 4px; border: 1.5px solid var(--accent); }
-.complyfy-app #headerUser { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; min-width: 0; }
-.complyfy-app #headerUser > span { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (max-width: 760px) {
-  .complyfy-app #headerUser > span { display: none; }
-  .complyfy-app .nav-btn { padding: 5px 9px; font-size: 11px; }
-}
-@media (max-width: 480px) {
-  .complyfy-app .site-header { padding: 8px 12px; }
-  .complyfy-app #headerUser { gap: 6px; }
-  .complyfy-app .avatar { width: 24px; height: 24px; font-size: 11px; }
-}
-.complyfy-app .avatar { width: 28px; height: 28px; background: var(--accent); color: var(--yellow); border-radius: 50%; font-weight: 700; font-size: 12px; font-family: var(--font-display); display: flex; align-items: center; justify-content: center; }
-.complyfy-app #logoutBtn { font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: var(--transition); }
-.complyfy-app #logoutBtn:hover { background: var(--bg); color: var(--ink); }
+.complyfy-app .header-right { display: flex; align-items: center; gap: 10px; }
+.complyfy-app .avatar { width: 28px; height: 28px; background: var(--accent); color: var(--yellow); border-radius: 50%; font-weight: 700; font-size: 12px; font-family: var(--font-display); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.complyfy-app .hamburger-btn { display: flex; flex-direction: column; justify-content: center; gap: 4px; width: 36px; height: 36px; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: var(--transition); }
+.complyfy-app .hamburger-btn:hover { background: var(--bg); }
+.complyfy-app .hamburger-btn span { display: block; height: 2px; width: 100%; background: var(--ink); border-radius: 2px; }
+.complyfy-app .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 60; }
+.complyfy-app .menu-panel { position: fixed; top: 64px; right: 12px; width: min(260px, calc(100vw - 24px)); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.18); padding: 12px; display: flex; flex-direction: column; gap: 6px; z-index: 70; }
+.complyfy-app .menu-panel .nav-btn { width: 100%; text-align: left; padding: 10px 12px; font-size: 13px; }
+.complyfy-app .menu-user { display: flex; align-items: center; gap: 10px; padding: 8px 4px 12px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.complyfy-app .menu-user-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.complyfy-app .menu-user-email { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px; }
+.complyfy-app .menu-panel #logoutBtn { text-align: left; padding: 10px 12px; font-size: 13px; border-radius: 8px; margin-top: 4px; border-top: 1px solid var(--border); padding-top: 12px; color: var(--muted); background: none; border-left: none; border-right: none; border-bottom: none; cursor: pointer; }
+.complyfy-app .menu-panel #logoutBtn:hover { background: var(--bg); color: var(--ink); }
 
 .complyfy-app .container { max-width: 680px; margin: 0 auto; padding: 36px 20px 60px; }
 .complyfy-app .card { background: var(--surface); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
