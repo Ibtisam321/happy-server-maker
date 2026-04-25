@@ -59,6 +59,9 @@ function ComplyfyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<Page>("home");
   const [roles, setRoles] = useState<Role[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const goTo = (p: Page) => { setPage(p); setMenuOpen(false); };
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -102,27 +105,45 @@ function ComplyfyPage() {
           Complyfy<span className="logo-dot"></span>
         </div>
         {user && (
-          <div id="headerUser">
-            <button className="secondary nav-btn" onClick={() => setPage("generator")}>Generator</button>
-            <button className="secondary nav-btn" onClick={() => setPage("history")}>History</button>
-            <button className="secondary nav-btn" onClick={() => setPage("toolbox")}>🧰 Toolbox</button>
-            <button className="secondary nav-btn" onClick={() => setPage("profile")}>Profile</button>
-            {isReviewer && (
-              <button className="secondary nav-btn" onClick={() => setPage("review")}>🛡️ Review</button>
-            )}
-            {isReviewer && (
-              <button className="secondary nav-btn" onClick={() => setPage("analytics")}>📊 Analytics</button>
-            )}
-            {isAdmin && (
-              <button className="secondary nav-btn" onClick={() => setPage("admin")}>⚙ Admin</button>
-            )}
+          <div className="header-right">
             <div className="avatar">{(user.email ?? "U").charAt(0).toUpperCase()}</div>
-            <span>
-              {user.email}
-              {isAdmin ? <span className="role-chip">Admin</span> : roles.includes("dpo") ? <span className="role-chip">DPO</span> : null}
-            </span>
-            <button id="logoutBtn" onClick={logout}>Sign out</button>
+            <button
+              className="hamburger-btn"
+              aria-label="Toggle menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              <span></span><span></span><span></span>
+            </button>
           </div>
+        )}
+        {user && menuOpen && (
+          <>
+            <div className="menu-overlay" onClick={() => setMenuOpen(false)} />
+            <nav className="menu-panel" id="headerUser">
+              <div className="menu-user">
+                <div className="avatar">{(user.email ?? "U").charAt(0).toUpperCase()}</div>
+                <div className="menu-user-info">
+                  <div className="menu-user-email">{user.email}</div>
+                  {isAdmin ? <span className="role-chip">Admin</span> : roles.includes("dpo") ? <span className="role-chip">DPO</span> : <span className="role-chip">User</span>}
+                </div>
+              </div>
+              <button className="secondary nav-btn" onClick={() => goTo("generator")}>Generator</button>
+              <button className="secondary nav-btn" onClick={() => goTo("history")}>History</button>
+              <button className="secondary nav-btn" onClick={() => goTo("toolbox")}>🧰 Toolbox</button>
+              <button className="secondary nav-btn" onClick={() => goTo("profile")}>Profile</button>
+              {isReviewer && (
+                <button className="secondary nav-btn" onClick={() => goTo("review")}>🛡️ Review</button>
+              )}
+              {isReviewer && (
+                <button className="secondary nav-btn" onClick={() => goTo("analytics")}>📊 Analytics</button>
+              )}
+              {isAdmin && (
+                <button className="secondary nav-btn" onClick={() => goTo("admin")}>⚙ Admin</button>
+              )}
+              <button id="logoutBtn" onClick={() => { setMenuOpen(false); logout(); }}>Sign out</button>
+            </nav>
+          </>
         )}
       </header>
 
